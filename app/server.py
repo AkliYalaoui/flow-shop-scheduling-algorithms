@@ -1,9 +1,10 @@
 from flask import Flask,request,jsonify
-from flask_cors import CORS
+from flask_cors import CORS,cross_origin
 import numpy as np
 import timeit
 
 app = Flask(__name__)
+app.config['CORS_HEADERS'] = 'Content-Type'
 CORS(app)
 
 def get_instance_taillard(C,x,y) :
@@ -56,6 +57,7 @@ def taillard_to_file(C,filename) :
     file.close()
 
 @app.route("/branch-and-bound",methods=["POST"])
+@cross_origin()
 def branchAndBound():
 
     from branchAndBound.BB import BrandAndBound
@@ -78,6 +80,7 @@ def branchAndBound():
         return {'error':  'Nous pouvons pas traiter votre instance, vérifier ses dimensions.'}
 
 @app.route("/heuristic-neh",methods=["POST"])
+@cross_origin()
 def heuristicNeh():
 
     from heuristics.Neh import FSP_NEH
@@ -102,6 +105,7 @@ def heuristicNeh():
         return {'error':  'Nous pouvons pas traiter votre instance, vérifier ses dimensions.'}
 
 @app.route("/heuristic-cds",methods=["POST"])
+@cross_origin()
 def heuristicCds():
 
     from heuristics.Cds import DCS
@@ -125,6 +129,7 @@ def heuristicCds():
         return {'error':  'Nous pouvons pas traiter votre instance, vérifier ses dimensions.'}
 
 @app.route("/heuristic-palmer",methods=["POST"])
+@cross_origin()
 def heuristicPalmer():
 
     from heuristics.Palmer import PalmerHeuristic
@@ -147,6 +152,7 @@ def heuristicPalmer():
         return {'error':  'Nous pouvons pas traiter votre instance, vérifier ses dimensions.'}
 
 @app.route("/metaheuristic-tabu",methods=["POST"])
+@cross_origin()
 def metaheuristicTabu():
 
     from metaheuristics.Tabu import Tabu
@@ -174,6 +180,7 @@ def metaheuristicTabu():
         return {'error':  'Nous pouvons pas traiter votre instance, vérifier ses dimensions.'}
 
 @app.route("/metaheuristic-gvns",methods=["POST"])
+@cross_origin()
 def metaheuristicGvns():
 
     from metaheuristics.Gvns import GVNS
@@ -200,6 +207,7 @@ def metaheuristicGvns():
         return {'error':  'Nous pouvons pas traiter votre instance, vérifier ses dimensions.'}
 
 @app.route("/metaheuristic-ga",methods=["POST"])
+@cross_origin()
 def metaheuristicGA():
 
     from metaheuristics.GA import run_ga
@@ -232,6 +240,7 @@ def metaheuristicGA():
 
 
 @app.route("/comparaison-heuristics",methods=["POST"])
+@cross_origin()
 def comparaisonHeuristics():
 
     from heuristics.Neh import FSP_NEH
