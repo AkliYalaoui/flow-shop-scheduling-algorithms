@@ -55,6 +55,10 @@ def taillard_to_file(C,filename) :
         file.write(l)
     file.close()
 
+@app.route("/",methods=["GET"])
+def home() :
+    return {"msg":"test api working!"}
+    
 @app.route("/branch-and-bound",methods=["POST"])
 def branchAndBound():
 
