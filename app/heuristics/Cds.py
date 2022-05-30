@@ -29,7 +29,7 @@ class DCS():
     def transform_exec_matrix(self, sequence):
         A = []
         for job in sequence:
-            A.append(self.C[job, :])
+            A.append(self.C[int(job), :])
 
         return np.array(A)   
 
