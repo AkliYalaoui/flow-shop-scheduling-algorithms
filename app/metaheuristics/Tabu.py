@@ -1,4 +1,4 @@
-from heuristics.Palmer import PalmerHeuristic
+from app.heuristics.Palmer import PalmerHeuristic
 from itertools import combinations
 import numpy as np
 

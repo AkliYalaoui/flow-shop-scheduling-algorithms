@@ -2,9 +2,21 @@ from flask import Flask,request,jsonify
 from flask_cors import CORS
 import numpy as np
 import timeit
+import json
 
 app = Flask(__name__)
 cors = CORS(app, resources={r"/*": {"origins": "*"}})
+
+
+class NpEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        if isinstance(obj, np.floating):
+            return float(obj)
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return super(NpEncoder, self).default(obj)
 
 def get_instance_taillard(C,x,y) :
     C = C.replace("\n", "")
@@ -62,7 +74,7 @@ def home() :
 @app.route("/branch-and-bound",methods=["POST"])
 def branchAndBound():
 
-    from branchAndBound.BB import BrandAndBound
+    from app.branchAndBound.BB import BrandAndBound
 
     try :
         processing_time = request.json['ptMatrice']
@@ -84,7 +96,7 @@ def branchAndBound():
 @app.route("/heuristic-neh",methods=["POST"])
 def heuristicNeh():
 
-    from heuristics.Neh import FSP_NEH
+    from app.heuristics.Neh import FSP_NEH
 
     try :
         processing_time = request.json['ptMatrice']
@@ -108,7 +120,7 @@ def heuristicNeh():
 @app.route("/heuristic-cds",methods=["POST"])
 def heuristicCds():
 
-    from heuristics.Cds import DCS
+    from app.heuristics.Cds import DCS
     try :
         processing_time = request.json['ptMatrice']
         m = request.json['nbMachine']
@@ -131,7 +143,7 @@ def heuristicCds():
 @app.route("/heuristic-palmer",methods=["POST"])
 def heuristicPalmer():
 
-    from heuristics.Palmer import PalmerHeuristic
+    from app.heuristics.Palmer import PalmerHeuristic
     try :
         processing_time = request.json['ptMatrice']
         m = int(request.json['nbMachine'])
@@ -153,7 +165,7 @@ def heuristicPalmer():
 @app.route("/metaheuristic-tabu",methods=["POST"])
 def metaheuristicTabu():
 
-    from metaheuristics.Tabu import Tabu
+    from app.metaheuristics.Tabu import Tabu
 
     try :
 
@@ -180,7 +192,7 @@ def metaheuristicTabu():
 @app.route("/metaheuristic-gvns",methods=["POST"])
 def metaheuristicGvns():
 
-    from metaheuristics.Gvns import GVNS
+    from app.metaheuristics.Gvns import GVNS
 
     try :
         
@@ -206,7 +218,7 @@ def metaheuristicGvns():
 @app.route("/metaheuristic-ga",methods=["POST"])
 def metaheuristicGA():
 
-    from metaheuristics.GA import run_ga
+    from app.metaheuristics.GA import run_ga
 
     try :
         
@@ -233,14 +245,47 @@ def metaheuristicGA():
         print(e)
         return {'error':  'Nous pouvons pas traiter votre instance, vérifier ses dimensions.'}
 
+@app.route("/hyperheuristic",methods=["POST"])
+def Hyperheuristic():
+
+    from app.hyperHeuristics.HhQl import QLHH
+    from app.heuristics.Palmer import PalmerHeuristic
+
+    try :
+        
+        processing_time = request.json['ptMatrice']
+        niter = int(request.json['niter'])
+        nepis = int(request.json['nepis'])
+        prob = float(request.json['prob'])
+        m = int(request.json['nbMachine'])
+        j = int(request.json['nbJob'])
+        C = get_instance_taillard(processing_time,m,j)
+
+
+        instance = PalmerHeuristic(C,m,j)
+        instance.run()
+        initial_sol,initial_fun = instance.ordre_opt,instance.M
+        start = timeit.default_timer()
+        best_sol, best_fun = QLHH(C,initial_sol,initial_fun,maxiter=niter,n_episodes=nepis,ep=prob)
+        end = timeit.default_timer()
+
+        data = get_start_time(C,best_sol)
+        best_fun = int(best_fun)
+        C = C.tolist()
+        return json.dumps({"instance":C,"jobs_order":best_sol,"cmax":best_fun,"time": end - start,'data':data},cls=NpEncoder)
+
+    except Exception as e :
+        print(e)
+        return {'error':  'Nous pouvons pas traiter votre instance, vérifier ses dimensions.'}
+
 
 
 @app.route("/comparaison-heuristics",methods=["POST"])
 def comparaisonHeuristics():
 
-    from heuristics.Neh import FSP_NEH
-    from heuristics.Palmer import PalmerHeuristic
-    from heuristics.Cds import DCS
+    from app.heuristics.Neh import FSP_NEH
+    from app.heuristics.Palmer import PalmerHeuristic
+    from app.heuristics.Cds import DCS
 
     try :
         processing_time = request.json['ptMatrice']
